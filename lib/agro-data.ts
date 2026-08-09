@@ -100,3 +100,12 @@ export const COMMODITIES: Commodity[] = [
   { name: "Turmeric", price: 13800, unit: "quintal", market: "Nizamabad, TS", trend: "up" },
   { name: "Chilli (Dry)", price: 18500, unit: "quintal", market: "Guntur, AP", trend: "flat" },
 ]
+// Default NPK starting values by soil type (kg/ha).
+// These are general starting estimates — farmers can edit them manually.
+export const SOIL_NPK_DEFAULTS: Record<(typeof SOIL_TYPES)[number], { N: number; P: number; K: number }> = {
+  Sandy: { N: 40, P: 15, K: 60 },
+  Loamy: { N: 80, P: 40, K: 120 },
+  Black: { N: 50, P: 20, K: 180 },
+  Red: { N: 45, P: 20, K: 100 },
+  Clayey: { N: 70, P: 35, K: 150 },
+}
