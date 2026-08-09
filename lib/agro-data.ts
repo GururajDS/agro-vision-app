@@ -109,3 +109,24 @@ export const SOIL_NPK_DEFAULTS: Record<(typeof SOIL_TYPES)[number], { N: number;
   Red: { N: 45, P: 20, K: 100 },
   Clayey: { N: 70, P: 35, K: 150 },
 }
+// Average national crop yield, in kg per acre (converted from govt. hectare data).
+// These are general estimates — real yield varies by region, irrigation, and practices.
+export const CROP_YIELD_PER_ACRE: Record<string, number> = {
+  Rice: 1130,
+  Paddy: 1130,
+  Wheat: 1415,
+  Barley: 1090,
+  Maize: 1295,
+  Millets: 485,
+  Cotton: 175,
+  Sugarcane: 32000,
+  Tobacco: 690,
+  "Ground Nuts": 610,
+  "Oil Seeds": 525,
+  Pulses: 325,
+  Kidneybeans: 325,
+  Coffee: 365,
+  Orange: 4450,
+  Pomegranate: 3640,
+  Watermelon: 8905,
+}
