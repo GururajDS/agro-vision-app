@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
-import { FlaskConical, Sprout, Droplets, Thermometer, Waves, Layers, Wheat, Loader2, AlertTriangle } from "lucide-react"
+import { useEffect, useState } from "react"
+import { FlaskConical, Sprout, Droplets, Thermometer, Waves, Layers, Wheat, Loader2, AlertTriangle, Info } from "lucide-react"
 import { NumberField, SelectField } from "@/components/form-fields"
 import { SOIL_TYPES, CROP_TYPES } from "@/lib/agro-data"
+import { getSelectedCrop } from "@/lib/selected-crop"
 
 const PREDICT_FERTILIZER_URL = "/api/predict-fertilizer"
 
@@ -35,6 +36,22 @@ export function FertilizerSuggestion() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submittedContext, setSubmittedContext] = useState<{ crop: string; soil: string } | null>(null)
+  const [savedCropNote, setSavedCropNote] = useState<string | null>(null)
+
+  useEffect(() => {
+    getSelectedCrop().then((saved) => {
+      if (!saved) return
+      const match = CROP_TYPES.find((c) => c.toLowerCase() === saved.toLowerCase())
+      if (match) {
+        setFields((prev) => ({ ...prev, crop: match }))
+        setSavedCropNote(`Using your saved crop: ${match}. Change below if you'd like a different one.`)
+      } else {
+        setSavedCropNote(
+          `Your saved crop (${saved}) isn't available for fertilizer suggestions — please pick one below.`,
+        )
+      }
+    })
+  }, [])
 
   const setField = (key: keyof Fields) => (value: string) =>
     setFields((prev) => ({ ...prev, [key]: value }))
@@ -89,6 +106,13 @@ export function FertilizerSuggestion() {
         <p className="mt-1 text-sm text-muted-foreground">
           Provide soil nutrients and crop to get a fertilizer recommendation.
         </p>
+
+        {savedCropNote ? (
+          <div className="mt-4 flex items-start gap-2 rounded-xl bg-primary/5 p-3 text-sm text-muted-foreground">
+            <Info size={16} className="mt-0.5 shrink-0 text-primary" />
+            <span>{savedCropNote}</span>
+          </div>
+        ) : null}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <NumberField
