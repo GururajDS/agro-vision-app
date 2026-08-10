@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Leaf, Sprout, Droplets, Thermometer, FlaskConical, CloudRain, Loader2, AlertTriangle } from "lucide-react"
+import { Leaf, Sprout, Droplets, Thermometer, FlaskConical, CloudRain, Loader2, AlertTriangle, Check } from "lucide-react"
 import { NumberField } from "@/components/form-fields"
+import { saveSelectedCrop } from "@/lib/selected-crop"
 
 const PREDICT_CROP_URL = "/api/predict-crop"
 
@@ -31,6 +32,8 @@ export function CropSuggestion() {
   const [result, setResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
   const setField = (key: keyof Fields) => (value: string) =>
     setFields((prev) => ({ ...prev, [key]: value }))
@@ -40,6 +43,7 @@ export function CropSuggestion() {
     setLoading(true)
     setError(null)
     setResult(null)
+    setSaved(false)
 
     try {
       const res = await fetch(PREDICT_CROP_URL, {
@@ -70,6 +74,17 @@ export function CropSuggestion() {
       setError("We couldn't get a suggestion right now. Please check your inputs and try again in a moment.")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleContinue() {
+    if (!result) return
+    setSaving(true)
+    try {
+      await saveSelectedCrop(result)
+      setSaved(true)
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -195,6 +210,34 @@ export function CropSuggestion() {
                   Best suited for your current soil profile.
                 </p>
               </div>
+
+              {saved ? (
+                <p className="flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+                  <Check size={16} />
+                  Saved as your current crop
+                </p>
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <p className="text-sm text-muted-foreground">Do you want to continue with this crop?</p>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleContinue}
+                      disabled={saving}
+                      className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-70"
+                    >
+                      {saving ? "Saving…" : "Yes, save it"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setResult(null)}
+                      className="rounded-xl border border-input bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
+                    >
+                      No
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
