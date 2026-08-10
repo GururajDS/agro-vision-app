@@ -1,24 +1,38 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
 import { getSession, signOut } from "@/lib/supabase-auth"
+import { getFieldProfile } from "@/lib/field-profile"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [checked, setChecked] = useState(false)
   const [email, setEmail] = useState<string | null>(null)
 
   useEffect(() => {
-    const session = getSession()
-    if (!session) {
-      router.replace("/login")
-      return
+    async function check() {
+      const session = getSession()
+      if (!session) {
+        router.replace("/login")
+        return
+      }
+      setEmail(session.user?.email ?? null)
+
+      if (pathname !== "/my-field") {
+        const profile = await getFieldProfile()
+        if (!profile) {
+          router.replace("/my-field")
+          return
+        }
+      }
+
+      setChecked(true)
     }
-    setEmail(session.user?.email ?? null)
-    setChecked(true)
-  }, [router])
+    check()
+  }, [router, pathname])
 
   if (!checked) {
     return (
