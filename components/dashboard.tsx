@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Leaf, FlaskConical, CloudSun, LineChart, Sprout } from "lucide-react"
+import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin } from "lucide-react"
+import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { CropSuggestion } from "@/components/sections/crop-suggestion"
 import { FertilizerSuggestion } from "@/components/sections/fertilizer-suggestion"
@@ -54,11 +55,18 @@ export function Dashboard() {
           ))}
         </nav>
 
+        <Link
+          href="/my-field"
+          className="mt-4 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <MapPin size={18} />
+          My Field
+        </Link>
+
         <p className="mt-auto pt-6 text-xs text-sidebar-foreground/60">
           Demo build with sample data.
         </p>
       </aside>
-
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Mobile top bar */}
@@ -86,7 +94,14 @@ export function Dashboard() {
               <Icon size={16} />
               {label}
             </button>
-          ))}
+         ))}
+          <Link
+            href="/my-field"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <MapPin size={16} />
+            My Field
+          </Link>
         </nav>
 
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
