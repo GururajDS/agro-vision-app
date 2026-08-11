@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import { LogOut } from "lucide-react"
-import { getSession, signOut } from "@/lib/supabase-auth"
+import { getValidSession, signOut } from "@/lib/supabase-auth"
 import { getFieldProfile } from "@/lib/field-profile"
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -14,7 +14,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function check() {
-      const session = getSession()
+      const session = await getValidSession()
       if (!session) {
         router.replace("/login")
         return
