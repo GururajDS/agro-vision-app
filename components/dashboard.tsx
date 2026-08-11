@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin } from "lucide-react"
+import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin, Wallet } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { CropSuggestion } from "@/components/sections/crop-suggestion"
@@ -63,6 +63,14 @@ export function Dashboard() {
           My Field
         </Link>
 
+        <Link
+          href="/expenditure"
+          className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <Wallet size={18} />
+          Expenditure Diary
+        </Link>
+
         <p className="mt-auto pt-6 text-xs text-sidebar-foreground/60">
           Demo build with sample data.
         </p>
@@ -101,6 +109,13 @@ export function Dashboard() {
           >
             <MapPin size={16} />
             My Field
+          </Link>
+          <Link
+            href="/expenditure"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <Wallet size={16} />
+            Expenditure Diary
           </Link>
         </nav>
 
