@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/supabase-auth"
+import { getValidSession } from "@/lib/supabase-auth"
 
 const SUPABASE_URL = "https://qhqbzrpwjlvfqgtsaozl.supabase.co"
 const SUPABASE_ANON_KEY =
@@ -26,7 +26,7 @@ export async function getPushPermissionState(): Promise<NotificationPermission |
 }
 
 export async function enablePushNotifications(): Promise<void> {
-  const session = getSession()
+  const session = await getValidSession()
   if (!session) throw new Error("Not logged in")
   if (!(await isPushSupported())) throw new Error("Notifications aren't supported on this browser/device")
 
