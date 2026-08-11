@@ -7,6 +7,9 @@ const SUPABASE_ANON_KEY =
 export type FieldProfile = {
   land_area_acres: number
   soil_type: string
+  latitude?: number | null
+  longitude?: number | null
+  location_name?: string | null
 }
 
 function authHeaders() {
@@ -23,7 +26,7 @@ export async function getFieldProfile(): Promise<FieldProfile | null> {
   if (!session) return null
 
   const res = await fetch(
-    `${SUPABASE_URL}/rest/v1/field_profiles?user_id=eq.${session.user.id}&select=land_area_acres,soil_type`,
+    `${SUPABASE_URL}/rest/v1/field_profiles?user_id=eq.${session.user.id}&select=land_area_acres,soil_type,latitude,longitude,location_name`,
     { headers: authHeaders() }
   )
   const data = await res.json()
