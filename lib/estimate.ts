@@ -55,7 +55,7 @@ export async function getHarvestEstimate(): Promise<HarvestEstimate> {
 
   let yieldKg: number | null = null
   if (crop && fieldProfile?.land_area_acres) {
-    const perAcre = CROP_YIELD_PER_ACRE[crop]
+    const perAcre = CROP_YIELD_PER_ACRE[crop.toLowerCase()]
     if (perAcre) {
       yieldKg = perAcre * fieldProfile.land_area_acres
     } else {
