@@ -8,7 +8,6 @@ type AuthSession = {
   user: { id: string; email?: string }
 }
 
-// Save session in the browser so the user stays logged in
 export function saveSession(session: AuthSession) {
   localStorage.setItem("agrovision_session", JSON.stringify(session))
 }
@@ -23,7 +22,46 @@ export function clearSession() {
   localStorage.removeItem("agrovision_session")
 }
 
-// Email + password sign up
+function decodeJwtExpiryMs(token: string): number | null {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")))
+    return typeof payload.exp === "number" ? payload.exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+// Returns a session with a fresh, non-expired access token — refreshing it first if needed.
+// Use this (not getSession) anywhere you're about to call the Supabase API.
+export async function getValidSession(): Promise<AuthSession | null> {
+  const session = getSession()
+  if (!session) return null
+
+  const expiresAt = decodeJwtExpiryMs(session.access_token)
+  const isStale = !expiresAt || expiresAt < Date.now() + 60_000
+  if (!isStale) return session
+
+  const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", apikey: SUPABASE_ANON_KEY },
+    body: JSON.stringify({ refresh_token: session.refresh_token }),
+  })
+
+  if (!res.ok) {
+    clearSession()
+    return null
+  }
+
+  const data = await res.json()
+  const refreshed: AuthSession = {
+    access_token: data.access_token,
+    refresh_token: data.refresh_token,
+    user: data.user ?? session.user,
+  }
+  saveSession(refreshed)
+  return refreshed
+}
+
 export async function signUpWithEmail(email: string, password: string) {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
     method: "POST",
@@ -35,7 +73,6 @@ export async function signUpWithEmail(email: string, password: string) {
   return data
 }
 
-// Email + password sign in
 export async function signInWithEmail(email: string, password: string) {
   const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
     method: "POST",
@@ -48,7 +85,6 @@ export async function signInWithEmail(email: string, password: string) {
   return data
 }
 
-// Redirects the browser to Google sign-in
 export function signInWithGoogle() {
   const redirectTo = `${window.location.origin}/auth/callback`
   window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectTo)}`
