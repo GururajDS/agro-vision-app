@@ -71,12 +71,20 @@ export function Dashboard() {
           Expenditure Diary
         </Link>
 
-        <Link
+       <Link
           href="/estimate"
           className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
           <TrendingUp size={18} />
           Harvest Estimate
+        </Link>
+
+        <Link
+          href="/price-trends"
+          className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <LineChart size={18} />
+          Price Trends
         </Link>
 
         <p className="mt-auto pt-6 text-xs text-sidebar-foreground/60">
@@ -125,12 +133,19 @@ export function Dashboard() {
             <Wallet size={16} />
             Expenditure Diary
           </Link>
-          <Link
+         <Link
             href="/estimate"
             className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
           >
             <TrendingUp size={16} />
             Harvest Estimate
+          </Link>
+          <Link
+            href="/price-trends"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <LineChart size={16} />
+            Price Trends
           </Link>
         </nav>
 
