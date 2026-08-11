@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/supabase-auth"
+import { getValidSession } from "@/lib/supabase-auth"
 
 const SUPABASE_URL = "https://qhqbzrpwjlvfqgtsaozl.supabase.co"
 const SUPABASE_ANON_KEY =
@@ -14,22 +14,13 @@ export type ExpenditureEntry = {
   note: string | null
 }
 
-function authHeaders() {
-  const session = getSession()
-  return {
-    "Content-Type": "application/json",
-    apikey: SUPABASE_ANON_KEY,
-    Authorization: `Bearer ${session?.access_token}`,
-  }
-}
-
 export async function getExpenditureEntries(): Promise<ExpenditureEntry[]> {
-  const session = getSession()
+  const session = await getValidSession()
   if (!session) return []
 
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/expenditure_entries?user_id=eq.${session.user.id}&select=id,category,amount,entry_date,note&order=entry_date.desc,id.desc`,
-    { headers: authHeaders() },
+    { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${session.access_token}` } },
   )
   return res.ok ? await res.json() : []
 }
@@ -40,12 +31,16 @@ export async function addExpenditureEntry(entry: {
   entry_date: string
   note?: string
 }): Promise<void> {
-  const session = getSession()
+  const session = await getValidSession()
   if (!session) throw new Error("Not logged in")
 
   const res = await fetch(`${SUPABASE_URL}/rest/v1/expenditure_entries`, {
     method: "POST",
-    headers: authHeaders(),
+    headers: {
+      "Content-Type": "application/json",
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${session.access_token}`,
+    },
     body: JSON.stringify({ user_id: session.user.id, ...entry }),
   })
 
@@ -56,9 +51,12 @@ export async function addExpenditureEntry(entry: {
 }
 
 export async function deleteExpenditureEntry(id: number): Promise<void> {
+  const session = await getValidSession()
+  if (!session) throw new Error("Not logged in")
+
   const res = await fetch(`${SUPABASE_URL}/rest/v1/expenditure_entries?id=eq.${id}`, {
     method: "DELETE",
-    headers: authHeaders(),
+    headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${session.access_token}` },
   })
   if (!res.ok) throw new Error("Failed to delete entry")
 }
