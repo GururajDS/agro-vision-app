@@ -1,4 +1,4 @@
-import { getSession } from "@/lib/supabase-auth"
+import { getValidSession } from "@/lib/supabase-auth"
 import { getSelectedCrop } from "@/lib/selected-crop"
 import { getFieldProfile } from "@/lib/field-profile"
 import { getExpenditureEntries } from "@/lib/expenditure"
@@ -21,7 +21,7 @@ export type HarvestEstimate = {
 }
 
 async function findLatestPrice(cropName: string): Promise<{ price: number; matched: string } | null> {
-  const session = getSession()
+  const session = await getValidSession()
   const res = await fetch(
     `${SUPABASE_URL}/rest/v1/commodity_price_history?commodity_name=ilike.*${encodeURIComponent(
       cropName,
