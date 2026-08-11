@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { NumberField, SelectField } from "@/components/form-fields"
 import { SOIL_TYPES, SOIL_NPK_DEFAULTS } from "@/lib/agro-data"
 import { getFieldProfile, saveFieldProfile } from "@/lib/field-profile"
+import { enablePushNotifications, getPushPermissionState } from "@/lib/push-notifications"
 
 function MyFieldForm() {
   const router = useRouter()
@@ -21,6 +22,9 @@ function MyFieldForm() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushError, setPushError] = useState<string | null>(null)
 
   useEffect(() => {
     getFieldProfile().then((profile) => {
@@ -32,6 +36,7 @@ function MyFieldForm() {
         setLocationName(profile.location_name ?? null)
       }
       setLoading(false)
+      getPushPermissionState().then((state) => setPushEnabled(state === "granted"))
     })
   }, [])
 
@@ -174,6 +179,30 @@ function MyFieldForm() {
           <p className="text-xs text-muted-foreground/80">
             Used for weather alerts. Your browser will ask permission the first time.
           </p>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium text-foreground">Weather alerts</label>
+          <Button
+            variant="outline"
+            onClick={async () => {
+              setPushBusy(true)
+              setPushError(null)
+              try {
+                await enablePushNotifications()
+                setPushEnabled(true)
+              } catch (e) {
+                setPushError(e instanceof Error ? e.message : "Something went wrong")
+              } finally {
+                setPushBusy(false)
+              }
+            }}
+            disabled={pushBusy || pushEnabled}
+            className="w-full justify-center"
+          >
+            {pushEnabled ? "Notifications enabled ✓" : pushBusy ? "Enabling…" : "Enable weather notifications"}
+          </Button>
+          {pushError ? <p className="text-xs text-destructive">{pushError}</p> : null}
         </div>
 
         <div className="rounded-xl bg-primary/5 p-3.5 text-sm">
