@@ -15,6 +15,8 @@ export async function GET() {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
+        // Run the function from Mumbai: data.gov.in refuses connections from outside India.
+        "x-region": "ap-south-1",
       },
       // Give the edge function some room, and avoid caching stale prices.
       cache: "no-store",
