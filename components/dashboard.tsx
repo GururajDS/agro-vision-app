@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin, Wallet, TrendingUp } from "lucide-react"
+import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin, Wallet, TrendingUp, User } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { CropSuggestion } from "@/components/sections/crop-suggestion"
@@ -71,7 +71,7 @@ export function Dashboard() {
           Expenditure Diary
         </Link>
 
-       <Link
+        <Link
           href="/estimate"
           className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
@@ -85,6 +85,14 @@ export function Dashboard() {
         >
           <LineChart size={18} />
           Price Trends
+        </Link>
+
+        <Link
+          href="/profile"
+          className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <User size={18} />
+          Profile
         </Link>
 
         <p className="mt-auto pt-6 text-xs text-sidebar-foreground/60">
@@ -118,7 +126,7 @@ export function Dashboard() {
               <Icon size={16} />
               {label}
             </button>
-         ))}
+          ))}
           <Link
             href="/my-field"
             className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
@@ -133,7 +141,7 @@ export function Dashboard() {
             <Wallet size={16} />
             Expenditure Diary
           </Link>
-         <Link
+          <Link
             href="/estimate"
             className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
           >
@@ -146,6 +154,13 @@ export function Dashboard() {
           >
             <LineChart size={16} />
             Price Trends
+          </Link>
+          <Link
+            href="/profile"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <User size={16} />
+            Profile
           </Link>
         </nav>
 
