@@ -3,10 +3,73 @@
 import { useEffect, useState } from "react"
 import { FlaskConical, Sprout, Droplets, Thermometer, Waves, Layers, Wheat, Loader2, AlertTriangle, Info } from "lucide-react"
 import { NumberField, SelectField } from "@/components/form-fields"
-import { SOIL_TYPES, CROP_TYPES } from "@/lib/agro-data"
+import { SOIL_TYPES } from "@/lib/agro-data"
 import { getSelectedCrop } from "@/lib/selected-crop"
 
 const PREDICT_FERTILIZER_URL = "/api/predict-fertilizer"
+
+// What the user sees  ->  what the fertilizer model understands.
+// The fertilizer model only knows these 11 groups:
+// Maize, Sugarcane, Cotton, Tobacco, Paddy, Barley, Wheat, Millets, Oil seeds, Pulses, Ground Nuts
+const CROP_TO_MODEL: Record<string, string> = {
+  // Good matches
+  Rice: "Paddy",
+  Maize: "Maize",
+  Cotton: "Cotton",
+  "Black Gram": "Pulses",
+  Chickpea: "Pulses",
+  "Kidney Beans": "Pulses",
+  Lentil: "Pulses",
+  "Moth Beans": "Pulses",
+  "Mung Bean": "Pulses",
+  "Pigeon Peas": "Pulses",
+  // Field crops the fertilizer model already knows
+  Barley: "Barley",
+  "Ground Nuts": "Ground Nuts",
+  Millets: "Millets",
+  "Oil seeds": "Oil seeds",
+  Sugarcane: "Sugarcane",
+  Tobacco: "Tobacco",
+  Wheat: "Wheat",
+  // Closest-match approximations
+  Jute: "Cotton",
+  Coconut: "Oil seeds",
+  Banana: "Sugarcane",
+  Coffee: "Sugarcane",
+  Mango: "Sugarcane",
+  Papaya: "Sugarcane",
+  Apple: "Sugarcane",
+  Grapes: "Sugarcane",
+  Orange: "Sugarcane",
+  Pomegranate: "Sugarcane",
+  Muskmelon: "Ground Nuts",
+  Watermelon: "Ground Nuts",
+}
+
+// Crops that are a direct (not approximate) match — no note is shown for these.
+const EXACT_MATCH = new Set([
+  "Rice",
+  "Maize",
+  "Cotton",
+  "Black Gram",
+  "Chickpea",
+  "Kidney Beans",
+  "Lentil",
+  "Moth Beans",
+  "Mung Bean",
+  "Pigeon Peas",
+  "Barley",
+  "Ground Nuts",
+  "Millets",
+  "Oil seeds",
+  "Sugarcane",
+  "Tobacco",
+  "Wheat",
+])
+
+const CROP_OPTIONS = Object.keys(CROP_TO_MODEL).sort((a, b) => a.localeCompare(b))
+
+const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, "")
 
 type Fields = {
   temperature: string
@@ -27,7 +90,7 @@ const INITIAL: Fields = {
   K: "",
   P: "",
   soil: SOIL_TYPES[0],
-  crop: CROP_TYPES[0],
+  crop: "Maize",
 }
 
 export function FertilizerSuggestion() {
@@ -41,14 +104,12 @@ export function FertilizerSuggestion() {
   useEffect(() => {
     getSelectedCrop().then((saved) => {
       if (!saved) return
-      const match = CROP_TYPES.find((c) => c.toLowerCase() === saved.toLowerCase())
+      const match = CROP_OPTIONS.find((c) => normalize(c) === normalize(saved))
       if (match) {
         setFields((prev) => ({ ...prev, crop: match }))
         setSavedCropNote(`Using your saved crop: ${match}. Change below if you'd like a different one.`)
       } else {
-        setSavedCropNote(
-          `Your saved crop (${saved}) isn't available for fertilizer suggestions — please pick one below.`,
-        )
+        setSavedCropNote(`Your saved crop (${saved}) isn't in the list — please pick one below.`)
       }
     })
   }, [])
@@ -74,7 +135,7 @@ export function FertilizerSuggestion() {
           potassium: Number(fields.K),
           phosphorous: Number(fields.P),
           soil_type: fields.soil,
-          crop_type: fields.crop,
+          crop_type: CROP_TO_MODEL[fields.crop] ?? fields.crop,
         }),
       })
 
@@ -95,6 +156,8 @@ export function FertilizerSuggestion() {
       setLoading(false)
     }
   }
+
+  const showApproxNote = submittedContext ? !EXACT_MATCH.has(submittedContext.crop) : false
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -176,7 +239,7 @@ export function FertilizerSuggestion() {
             name="crop"
             value={fields.crop}
             onChange={setField("crop")}
-            options={CROP_TYPES}
+            options={CROP_OPTIONS}
             icon={<Wheat size={16} />}
           />
         </div>
@@ -233,6 +296,11 @@ export function FertilizerSuggestion() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Suggested for {submittedContext?.crop} on {submittedContext?.soil} soil.
                 </p>
+                {showApproxNote ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Based on the closest crop group the model knows.
+                  </p>
+                ) : null}
               </div>
             </div>
           ) : (
