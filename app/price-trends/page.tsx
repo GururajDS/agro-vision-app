@@ -5,9 +5,28 @@ import { LineChart, Loader2 } from "lucide-react"
 import { AuthGuard } from "@/components/auth-guard"
 import { SelectField } from "@/components/form-fields"
 import { PriceTrendChart } from "@/components/price-trend-chart"
-import { getAvailableCommodities, getPriceHistory, type PricePoint } from "@/lib/price-history"
+import {
+  getAvailableCommodities,
+  getPriceHistory,
+  type CommodityInfo,
+  type PricePoint,
+} from "@/lib/price-history"
+import { getSelectedCrop } from "@/lib/selected-crop"
 
 const RANGE_OPTIONS = ["7", "30", "90"] as const
+
+// Open on the commodity that matches the user's saved crop (e.g. "maize"),
+// otherwise on the commodity with the most days of data.
+function pickDefault(list: CommodityInfo[], savedCrop: string | null): string {
+  if (savedCrop) {
+    const crop = savedCrop.toLowerCase()
+    const matches = list.filter((c) => c.name.toLowerCase().includes(crop))
+    if (matches.length > 0) {
+      return matches.sort((a, b) => b.days - a.days)[0].name
+    }
+  }
+  return [...list].sort((a, b) => b.days - a.days || a.name.localeCompare(b.name))[0].name
+}
 
 function PriceTrendsView() {
   const [commodities, setCommodities] = useState<string[]>([])
@@ -15,13 +34,23 @@ function PriceTrendsView() {
   const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>("30")
   const [data, setData] = useState<PricePoint[]>([])
   const [loading, setLoading] = useState(true)
+  const [listLoaded, setListLoaded] = useState(false)
 
   useEffect(() => {
-    getAvailableCommodities().then((list) => {
-      setCommodities(list)
-      if (list.length > 0) setSelected(list[0])
-      setLoading(false)
-    })
+    async function load() {
+      const list = await getAvailableCommodities()
+      let savedCrop: string | null = null
+      try {
+        savedCrop = await getSelectedCrop()
+      } catch {
+        savedCrop = null
+      }
+      setCommodities(list.map((c) => c.name))
+      if (list.length > 0) setSelected(pickDefault(list, savedCrop))
+      setListLoaded(true)
+      if (list.length === 0) setLoading(false)
+    }
+    load()
   }, [])
 
   useEffect(() => {
@@ -45,7 +74,7 @@ function PriceTrendsView() {
         </div>
       </div>
 
-      {commodities.length === 0 && !loading ? (
+      {listLoaded && commodities.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
           No price data collected yet. Check back after tomorrow's automatic update.
         </p>
