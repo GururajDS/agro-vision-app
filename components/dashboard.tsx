@@ -88,6 +88,14 @@ export function Dashboard() {
         </Link>
 
         <Link
+          href="/organic-fertilizers"
+          className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <Sprout size={18} />
+          Organic Fertilizers
+        </Link>
+
+        <Link
           href="/profile"
           className="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-left text-sm font-medium text-sidebar-foreground/80 transition hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         >
@@ -154,6 +162,13 @@ export function Dashboard() {
           >
             <LineChart size={16} />
             Price Trends
+          </Link>
+          <Link
+            href="/organic-fertilizers"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm font-medium text-muted-foreground"
+          >
+            <Sprout size={16} />
+            Organic Fertilizers
           </Link>
           <Link
             href="/profile"
