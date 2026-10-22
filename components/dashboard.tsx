@@ -114,9 +114,6 @@ export function Dashboard() {
           Profile
         </Link>
 
-        <p className="mt-auto pt-6 text-xs text-sidebar-foreground/60">
-          Demo build with sample data.
-        </p>
       </aside>
       {/* Main */}
       <div className="flex min-w-0 flex-1 flex-col">
