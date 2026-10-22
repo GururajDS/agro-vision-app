@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { saveSession } from "@/lib/supabase-auth"
+import { useT } from "@/lib/i18n"
 
 const SUPABASE_URL = "https://qhqbzrpwjlvfqgtsaozl.supabase.co"
 const SUPABASE_ANON_KEY =
@@ -10,6 +11,7 @@ const SUPABASE_ANON_KEY =
 
 export default function AuthCallbackPage() {
   const router = useRouter()
+  const { t } = useT()
 
   useEffect(() => {
     async function finishLogin() {
@@ -37,7 +39,7 @@ export default function AuthCallbackPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <p className="text-muted-foreground">Signing you in…</p>
+      <p className="text-muted-foreground">{t("callback.signingIn")}</p>
     </div>
   )
 }
