@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { FlaskConical, Sprout, Droplets, Thermometer, Waves, Layers, Wheat, Loader2, AlertTriangle, Info } from "lucide-react"
 import { NumberField, SelectField } from "@/components/form-fields"
 import { SOIL_TYPES } from "@/lib/agro-data"
 import { getSelectedCrop } from "@/lib/selected-crop"
+import { getOrganicAlternatives } from "@/lib/organic-data"
 
 const PREDICT_FERTILIZER_URL = "/api/predict-fertilizer"
 
@@ -158,6 +160,7 @@ export function FertilizerSuggestion() {
   }
 
   const showApproxNote = submittedContext ? !EXACT_MATCH.has(submittedContext.crop) : false
+  const organic = result ? getOrganicAlternatives(result) : []
 
   return (
     <div className="grid gap-6 lg:grid-cols-5">
@@ -302,6 +305,28 @@ export function FertilizerSuggestion() {
                   </p>
                 ) : null}
               </div>
+
+              {organic.length > 0 ? (
+                <div className="w-full rounded-xl bg-primary/5 p-3 text-left">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Organic alternatives
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Natural options that give similar nutrients. Tap one to see how to prepare it.
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {organic.map((o) => (
+                      <Link
+                        key={o.id}
+                        href={`/organic-fertilizers#${o.id}`}
+                        className="rounded-full bg-card px-3 py-1.5 text-sm font-medium text-primary shadow-sm hover:underline"
+                      >
+                        {o.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           ) : (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
