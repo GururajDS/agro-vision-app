@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Bricolage_Grotesque, Nunito_Sans } from 'next/font/google'
+import { HelpAssistant } from '@/components/help-assistant'
 import './globals.css'
 
 const bricolage = Bricolage_Grotesque({
@@ -36,6 +37,7 @@ export default function RootLayout({
     <html lang="en" className={`light bg-background ${bricolage.variable} ${nunito.variable}`}>
       <body className="antialiased font-sans">
         {children}
+        <HelpAssistant />
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
