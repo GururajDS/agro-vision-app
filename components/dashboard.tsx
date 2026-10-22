@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Leaf, FlaskConical, CloudSun, LineChart, Sprout, MapPin, Wallet, TrendingUp, User } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -21,6 +21,17 @@ type SectionId = (typeof NAV)[number]["id"]
 export function Dashboard() {
   const [active, setActive] = useState<SectionId>("crop")
   const current = NAV.find((n) => n.id === active)!
+
+  // Lets the Help Assistant (and links like /#fertilizer) open a specific tab.
+  useEffect(() => {
+    const openTab = (id: string) => {
+      if (NAV.some((n) => n.id === id)) setActive(id as SectionId)
+    }
+    openTab(window.location.hash.replace("#", ""))
+    const onEvent = (e: Event) => openTab((e as CustomEvent<string>).detail)
+    window.addEventListener("agro-open-tab", onEvent)
+    return () => window.removeEventListener("agro-open-tab", onEvent)
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
