@@ -13,10 +13,16 @@ type LanguageContextValue = {
   t: TFunction
   // Translates a crop name such as "rice", "Kidney Beans" or "Ground Nuts".
   tc: (name: string) => string
+  // Translates a fertilizer name such as "Urea" or "DAP". Codes like "14-35-14" stay as they are.
+  tf: (name: string) => string
 }
 
 function cropKey(name: string) {
   return "crop." + name.toLowerCase().replace(/[^a-z]/g, "")
+}
+
+function fertKey(name: string) {
+  return "fert." + name.toLowerCase().replace(/[^a-z]/g, "")
 }
 
 const LanguageContext = createContext<LanguageContextValue>({
@@ -24,6 +30,7 @@ const LanguageContext = createContext<LanguageContextValue>({
   setLang: () => {},
   t: (key) => DICT.en[key] ?? key,
   tc: (name) => DICT.en[cropKey(name)] ?? name,
+  tf: (name) => DICT.en[fertKey(name)] ?? name,
 })
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -73,7 +80,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   )
 
-  return <LanguageContext.Provider value={{ lang, setLang, t, tc }}>{children}</LanguageContext.Provider>
+  const tf = useCallback(
+    (name: string) => {
+      const key = fertKey(name)
+      // Names with no letters (like "14-35-14") have no entry and are shown as-is.
+      return DICT[lang][key] ?? DICT.en[key] ?? name
+    },
+    [lang],
+  )
+
+  return <LanguageContext.Provider value={{ lang, setLang, t, tc, tf }}>{children}</LanguageContext.Provider>
 }
 
 export function useT() {
