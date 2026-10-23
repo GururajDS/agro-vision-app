@@ -63,9 +63,11 @@ type SelectFieldProps = {
   onChange: (value: string) => void
   options: readonly string[]
   icon?: ReactNode
+  // Optional: show a translated label for each option while keeping the original value.
+  getLabel?: (option: string) => string
 }
 
-export function SelectField({ label, name, value, onChange, options, icon }: SelectFieldProps) {
+export function SelectField({ label, name, value, onChange, options, icon, getLabel }: SelectFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={name} className="flex items-center gap-1.5 text-sm font-medium text-foreground">
@@ -84,7 +86,7 @@ export function SelectField({ label, name, value, onChange, options, icon }: Sel
       >
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {getLabel ? getLabel(option) : option}
           </option>
         ))}
       </select>
