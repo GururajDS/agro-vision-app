@@ -1,5 +1,6 @@
 import { common } from "@/lib/tr/common"
 import { shell } from "@/lib/tr/shell"
+import { field } from "@/lib/tr/field"
 
 export type Lang = "en" | "kn" | "hi"
 
@@ -12,7 +13,7 @@ export const LANGS: { code: Lang; label: string }[] = [
 type Area = Record<Lang, Record<string, string>>
 
 // Every area's text file is listed here. New areas get added to this list.
-const AREAS: Area[] = [common, shell]
+const AREAS: Area[] = [common, shell, field]
 
 function merge(lang: Lang): Record<string, string> {
   return Object.assign({}, ...AREAS.map((a) => a[lang])) as Record<string, string>
