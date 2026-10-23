@@ -7,6 +7,7 @@ import { NumberField, SelectField } from "@/components/form-fields"
 import { SOIL_TYPES } from "@/lib/agro-data"
 import { getSelectedCrop } from "@/lib/selected-crop"
 import { getOrganicAlternatives } from "@/lib/organic-data"
+import { useT } from "@/lib/i18n"
 
 const PREDICT_FERTILIZER_URL = "/api/predict-fertilizer"
 
@@ -96,12 +97,14 @@ const INITIAL: Fields = {
 }
 
 export function FertilizerSuggestion() {
+  const { t, tc, tf } = useT()
   const [fields, setFields] = useState<Fields>(INITIAL)
   const [result, setResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submittedContext, setSubmittedContext] = useState<{ crop: string; soil: string } | null>(null)
-  const [savedCropNote, setSavedCropNote] = useState<string | null>(null)
+  // The note is kept as data (not text) so it re-translates when the language changes.
+  const [savedCropNote, setSavedCropNote] = useState<{ kind: "using" | "missing"; crop: string } | null>(null)
 
   useEffect(() => {
     getSelectedCrop().then((saved) => {
@@ -109,9 +112,9 @@ export function FertilizerSuggestion() {
       const match = CROP_OPTIONS.find((c) => normalize(c) === normalize(saved))
       if (match) {
         setFields((prev) => ({ ...prev, crop: match }))
-        setSavedCropNote(`Using your saved crop: ${match}. Change below if you'd like a different one.`)
+        setSavedCropNote({ kind: "using", crop: match })
       } else {
-        setSavedCropNote(`Your saved crop (${saved}) isn't in the list — please pick one below.`)
+        setSavedCropNote({ kind: "missing", crop: saved })
       }
     })
   }, [])
@@ -153,7 +156,7 @@ export function FertilizerSuggestion() {
       setSubmittedContext({ crop: fields.crop, soil: fields.soil })
       setResult(data.recommended_fertilizer)
     } catch {
-      setError("We couldn't get a suggestion right now. Please check your inputs and try again in a moment.")
+      setError(t("suggest.error"))
     } finally {
       setLoading(false)
     }
@@ -168,21 +171,23 @@ export function FertilizerSuggestion() {
         onSubmit={handleSubmit}
         className="lg:col-span-3 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
       >
-        <h2 className="font-heading text-lg font-semibold text-foreground">Field & Crop Details</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Provide soil nutrients and crop to get a fertilizer recommendation.
-        </p>
+        <h2 className="font-heading text-lg font-semibold text-foreground">{t("fertPage.formTitle")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("fertPage.formSub")}</p>
 
         {savedCropNote ? (
           <div className="mt-4 flex items-start gap-2 rounded-xl bg-primary/5 p-3 text-sm text-muted-foreground">
             <Info size={16} className="mt-0.5 shrink-0 text-primary" />
-            <span>{savedCropNote}</span>
+            <span>
+              {savedCropNote.kind === "using"
+                ? t("fertPage.savedUsing", { crop: tc(savedCropNote.crop) })
+                : t("fertPage.savedMissing", { crop: tc(savedCropNote.crop) })}
+            </span>
           </div>
         ) : null}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <NumberField
-            label="Temperature"
+            label={t("label.temperature")}
             name="f-temperature"
             unit="°C"
             value={fields.temperature}
@@ -190,7 +195,7 @@ export function FertilizerSuggestion() {
             icon={<Thermometer size={16} />}
           />
           <NumberField
-            label="Humidity"
+            label={t("label.humidity")}
             name="f-humidity"
             unit="%"
             value={fields.humidity}
@@ -198,7 +203,7 @@ export function FertilizerSuggestion() {
             icon={<Droplets size={16} />}
           />
           <NumberField
-            label="Moisture"
+            label={t("label.moisture")}
             name="f-moisture"
             unit="%"
             value={fields.moisture}
@@ -206,43 +211,45 @@ export function FertilizerSuggestion() {
             icon={<Waves size={16} />}
           />
           <NumberField
-            label="Nitrogen"
+            label={t("label.nitrogen")}
             name="f-nitrogen"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.N}
             onChange={setField("N")}
             icon={<Sprout size={16} />}
           />
           <NumberField
-            label="Potassium"
+            label={t("label.potassium")}
             name="f-potassium"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.K}
             onChange={setField("K")}
             icon={<Sprout size={16} />}
           />
           <NumberField
-            label="Phosphorous"
+            label={t("label.phosphorous")}
             name="f-phosphorous"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.P}
             onChange={setField("P")}
             icon={<Sprout size={16} />}
           />
           <SelectField
-            label="Soil Type"
+            label={t("myField.soilType")}
             name="soil"
             value={fields.soil}
             onChange={setField("soil")}
             options={SOIL_TYPES}
+            getLabel={(o) => t(`soil.${o}`)}
             icon={<Layers size={16} />}
           />
           <SelectField
-            label="Crop Type"
+            label={t("label.cropType")}
             name="crop"
             value={fields.crop}
             onChange={setField("crop")}
             options={CROP_OPTIONS}
+            getLabel={(o) => tc(o)}
             icon={<Wheat size={16} />}
           />
         </div>
@@ -255,12 +262,12 @@ export function FertilizerSuggestion() {
           {loading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Getting suggestion…
+              {t("suggest.loading")}
             </>
           ) : (
             <>
               <FlaskConical size={18} />
-              Get Suggestion
+              {t("suggest.button")}
             </>
           )}
         </button>
@@ -269,18 +276,14 @@ export function FertilizerSuggestion() {
       <div className="lg:col-span-2">
         <div className="flex h-full flex-col justify-center rounded-2xl border border-border bg-gradient-to-br from-secondary to-card p-6 shadow-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recommended Fertilizer
+            {t("fertPage.resultTitle")}
           </span>
           {loading ? (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/12 text-primary">
                 <Loader2 size={40} strokeWidth={1.75} className="animate-spin" />
               </div>
-              <p className="max-w-[16rem] text-sm text-muted-foreground">
-                Analyzing your field details… This can take up to{" "}
-                <span className="font-medium text-foreground">60 seconds</span> on the first request while the service
-                wakes up.
-              </p>
+              <p className="max-w-[16rem] text-sm text-muted-foreground">{t("fertPage.analyzing")}</p>
             </div>
           ) : error ? (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
@@ -295,35 +298,40 @@ export function FertilizerSuggestion() {
                 <FlaskConical size={40} strokeWidth={1.75} />
               </div>
               <div>
-                <p className="font-heading text-3xl font-bold text-foreground">{result}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Suggested for {submittedContext?.crop} on {submittedContext?.soil} soil.
-                </p>
-                {showApproxNote ? (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Based on the closest crop group the model knows.
+                <p className="font-heading text-3xl font-bold text-foreground">{tf(result)}</p>
+                {submittedContext ? (
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t("fertPage.suggestedFor", {
+                      crop: tc(submittedContext.crop),
+                      soil: t(`soil.${submittedContext.soil}.lower`),
+                    })}
                   </p>
+                ) : null}
+                {showApproxNote ? (
+                  <p className="mt-2 text-xs text-muted-foreground">{t("fertPage.approx")}</p>
                 ) : null}
               </div>
 
               {organic.length > 0 ? (
                 <div className="w-full rounded-xl bg-primary/5 p-3 text-left">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Organic alternatives
+                    {t("fertPage.organicTitle")}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Natural options that give similar nutrients. Tap one to see how to prepare it.
-                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">{t("fertPage.organicSub")}</p>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    {organic.map((o) => (
-                      <Link
-                        key={o.id}
-                        href={`/organic-fertilizers#${o.id}`}
-                        className="rounded-full bg-card px-3 py-1.5 text-sm font-medium text-primary shadow-sm hover:underline"
-                      >
-                        {o.name}
-                      </Link>
-                    ))}
+                    {organic.map((o) => {
+                      const key = `organic.${o.id}.name`
+                      const translated = t(key)
+                      return (
+                        <Link
+                          key={o.id}
+                          href={`/organic-fertilizers#${o.id}`}
+                          className="rounded-full bg-card px-3 py-1.5 text-sm font-medium text-primary shadow-sm hover:underline"
+                        >
+                          {translated === key ? o.name : translated}
+                        </Link>
+                      )
+                    })}
                   </div>
                 </div>
               ) : null}
@@ -333,10 +341,7 @@ export function FertilizerSuggestion() {
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <FlaskConical size={40} strokeWidth={1.5} />
               </div>
-              <p className="max-w-[16rem] text-sm text-muted-foreground">
-                Enter your details and tap{" "}
-                <span className="font-medium text-foreground">Get Suggestion</span> to see the recommended fertilizer here.
-              </p>
+              <p className="max-w-[16rem] text-sm text-muted-foreground">{t("fertPage.empty")}</p>
             </div>
           )}
         </div>
