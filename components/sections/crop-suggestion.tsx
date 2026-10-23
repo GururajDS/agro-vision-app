@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Leaf, Sprout, Droplets, Thermometer, FlaskConical, CloudRain, Loader2, AlertTriangle, Check } from "lucide-react"
 import { NumberField } from "@/components/form-fields"
 import { saveSelectedCrop } from "@/lib/selected-crop"
+import { useT } from "@/lib/i18n"
 
 const PREDICT_CROP_URL = "/api/predict-crop"
 
@@ -28,6 +29,7 @@ const EMPTY: Fields = {
 }
 
 export function CropSuggestion() {
+  const { t, tc } = useT()
   const [fields, setFields] = useState<Fields>(EMPTY)
   const [result, setResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -71,7 +73,7 @@ export function CropSuggestion() {
 
       setResult(data.recommended_crop)
     } catch {
-      setError("We couldn't get a suggestion right now. Please check your inputs and try again in a moment.")
+      setError(t("suggest.error"))
     } finally {
       setLoading(false)
     }
@@ -94,38 +96,36 @@ export function CropSuggestion() {
         onSubmit={handleSubmit}
         className="lg:col-span-3 rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6"
       >
-        <h2 className="font-heading text-lg font-semibold text-foreground">Soil & Climate Inputs</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Enter your field readings to get a recommended crop.
-        </p>
+        <h2 className="font-heading text-lg font-semibold text-foreground">{t("cropPage.formTitle")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("cropPage.formSub")}</p>
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <NumberField
-            label="Nitrogen (N)"
+            label={`${t("label.nitrogen")} (N)`}
             name="nitrogen"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.N}
             onChange={setField("N")}
             icon={<Sprout size={16} />}
           />
           <NumberField
-            label="Phosphorous (P)"
+            label={`${t("label.phosphorous")} (P)`}
             name="phosphorous"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.P}
             onChange={setField("P")}
             icon={<Sprout size={16} />}
           />
           <NumberField
-            label="Potassium (K)"
+            label={`${t("label.potassium")} (K)`}
             name="potassium"
-            unit="kg/ha"
+            unit={t("unit.kgha")}
             value={fields.K}
             onChange={setField("K")}
             icon={<Sprout size={16} />}
           />
           <NumberField
-            label="Temperature"
+            label={t("label.temperature")}
             name="temperature"
             unit="°C"
             value={fields.temperature}
@@ -133,7 +133,7 @@ export function CropSuggestion() {
             icon={<Thermometer size={16} />}
           />
           <NumberField
-            label="Humidity"
+            label={t("label.humidity")}
             name="humidity"
             unit="%"
             value={fields.humidity}
@@ -148,9 +148,9 @@ export function CropSuggestion() {
             icon={<FlaskConical size={16} />}
           />
           <NumberField
-            label="Rainfall"
+            label={t("label.rainfall")}
             name="rainfall"
-            unit="mm"
+            unit={t("unit.mm")}
             value={fields.rainfall}
             onChange={setField("rainfall")}
             icon={<CloudRain size={16} />}
@@ -165,12 +165,12 @@ export function CropSuggestion() {
           {loading ? (
             <>
               <Loader2 size={18} className="animate-spin" />
-              Getting suggestion…
+              {t("suggest.loading")}
             </>
           ) : (
             <>
               <Leaf size={18} />
-              Get Suggestion
+              {t("suggest.button")}
             </>
           )}
         </button>
@@ -179,18 +179,14 @@ export function CropSuggestion() {
       <div className="lg:col-span-2">
         <div className="flex h-full flex-col justify-center rounded-2xl border border-border bg-gradient-to-br from-secondary to-card p-6 shadow-sm">
           <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Recommended Crop
+            {t("cropPage.resultTitle")}
           </span>
           {loading ? (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/12 text-primary">
                 <Loader2 size={40} strokeWidth={1.75} className="animate-spin" />
               </div>
-              <p className="max-w-[16rem] text-sm text-muted-foreground">
-                Analyzing your soil profile… This can take up to{" "}
-                <span className="font-medium text-foreground">60 seconds</span> on the first request while the service
-                wakes up.
-              </p>
+              <p className="max-w-[16rem] text-sm text-muted-foreground">{t("cropPage.analyzing")}</p>
             </div>
           ) : error ? (
             <div className="mt-4 flex flex-col items-center gap-4 py-6 text-center">
@@ -205,20 +201,18 @@ export function CropSuggestion() {
                 <Leaf size={40} strokeWidth={1.75} />
               </div>
               <div>
-                <p className="font-heading text-3xl font-bold capitalize text-foreground">{result}</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Best suited for your current soil profile.
-                </p>
+                <p className="font-heading text-3xl font-bold text-foreground">{tc(result)}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{t("cropPage.bestSuited")}</p>
               </div>
 
               {saved ? (
                 <p className="flex items-center gap-1.5 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
                   <Check size={16} />
-                  Saved as your current crop
+                  {t("cropPage.saved")}
                 </p>
               ) : (
                 <div className="flex flex-col items-center gap-2">
-                  <p className="text-sm text-muted-foreground">Do you want to continue with this crop?</p>
+                  <p className="text-sm text-muted-foreground">{t("cropPage.continueQ")}</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -226,14 +220,14 @@ export function CropSuggestion() {
                       disabled={saving}
                       className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-70"
                     >
-                      {saving ? "Saving…" : "Yes, save it"}
+                      {saving ? t("cropPage.saving") : t("cropPage.yesSave")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setResult(null)}
                       className="rounded-xl border border-input bg-card px-4 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
                     >
-                      No
+                      {t("common.no")}
                     </button>
                   </div>
                 </div>
@@ -244,10 +238,7 @@ export function CropSuggestion() {
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted text-muted-foreground">
                 <Leaf size={40} strokeWidth={1.5} />
               </div>
-              <p className="max-w-[16rem] text-sm text-muted-foreground">
-                Fill in the field values and tap{" "}
-                <span className="font-medium text-foreground">Get Suggestion</span> to see the recommended crop here.
-              </p>
+              <p className="max-w-[16rem] text-sm text-muted-foreground">{t("cropPage.empty")}</p>
             </div>
           )}
         </div>
