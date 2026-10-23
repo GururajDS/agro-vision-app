@@ -9,9 +9,18 @@ import { NumberField, SelectField } from "@/components/form-fields"
 import { SOIL_TYPES, SOIL_NPK_DEFAULTS } from "@/lib/agro-data"
 import { getFieldProfile, saveFieldProfile } from "@/lib/field-profile"
 import { enablePushNotifications, getPushPermissionState } from "@/lib/push-notifications"
+import { useT } from "@/lib/i18n"
+
+// The push helper throws English messages; map the known ones to translated text.
+const PUSH_ERRORS: Record<string, string> = {
+  "Not logged in": "myField.err.notLoggedIn",
+  "Notifications aren't supported on this browser/device": "myField.err.pushUnsupported",
+  "Notification permission was not granted": "myField.err.pushDenied",
+}
 
 function MyFieldForm() {
   const router = useRouter()
+  const { t, lang } = useT()
   const [landArea, setLandArea] = useState("")
   const [soilType, setSoilType] = useState<(typeof SOIL_TYPES)[number]>(SOIL_TYPES[0])
   const [latitude, setLatitude] = useState<number | null>(null)
@@ -43,7 +52,7 @@ function MyFieldForm() {
   function handleDetectLocation() {
     setLocationError(null)
     if (!("geolocation" in navigator)) {
-      setLocationError("Location isn't supported on this device/browser.")
+      setLocationError(t("myField.err.locUnsupported"))
       return
     }
     setDetecting(true)
@@ -55,7 +64,7 @@ function MyFieldForm() {
         setLongitude(lon)
         try {
           const res = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`,
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${lang}`,
           )
           const data = await res.json()
           const name = [data.locality, data.principalSubdivision].filter(Boolean).join(", ")
@@ -69,9 +78,7 @@ function MyFieldForm() {
       (err) => {
         setDetecting(false)
         setLocationError(
-          err.code === err.PERMISSION_DENIED
-            ? "Location permission was denied. You can allow it in your browser settings and try again."
-            : "Couldn't detect your location. Please try again.",
+          err.code === err.PERMISSION_DENIED ? t("myField.err.locDenied") : t("myField.err.locFailed"),
         )
       },
       { enableHighAccuracy: true, timeout: 10000 },
@@ -98,7 +105,7 @@ function MyFieldForm() {
   const npk = SOIL_NPK_DEFAULTS[soilType]
 
   if (loading) {
-    return <p className="p-6 text-sm text-muted-foreground">Loading…</p>
+    return <p className="p-6 text-sm text-muted-foreground">{t("common.loading")}</p>
   }
 
   return (
@@ -108,27 +115,28 @@ function MyFieldForm() {
           <MapPin size={20} />
         </div>
         <div>
-          <h1 className="font-heading text-lg font-bold text-foreground">My Field</h1>
-          <p className="text-xs text-muted-foreground">Saved once, editable anytime</p>
+          <h1 className="font-heading text-lg font-bold text-foreground">{t("myField.title")}</h1>
+          <p className="text-xs text-muted-foreground">{t("myField.subtitle")}</p>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm">
         <NumberField
-          label="Land area"
+          label={t("myField.landArea")}
           name="landArea"
           value={landArea}
           onChange={setLandArea}
-          unit="acres"
-          placeholder="e.g. 2.5"
+          unit={t("myField.acres")}
+          placeholder={t("myField.placeholder")}
         />
 
         <SelectField
-          label="Soil type"
+          label={t("myField.soilType")}
           name="soilType"
           value={soilType}
           onChange={(v) => setSoilType(v as (typeof SOIL_TYPES)[number])}
           options={SOIL_TYPES}
+          getLabel={(o) => t(`soil.${o}`)}
         />
 
         <div className="flex flex-col gap-1.5">
@@ -136,7 +144,7 @@ function MyFieldForm() {
             <span className="text-primary">
               <MapPin size={14} />
             </span>
-            Field location
+            {t("myField.location")}
           </label>
 
           {locationName ? (
@@ -151,7 +159,7 @@ function MyFieldForm() {
                 disabled={detecting}
                 className="text-xs font-medium text-primary hover:underline disabled:opacity-60"
               >
-                {detecting ? "Detecting…" : "Re-detect"}
+                {detecting ? t("myField.detecting") : t("myField.redetect")}
               </button>
             </div>
           ) : (
@@ -164,25 +172,23 @@ function MyFieldForm() {
               {detecting ? (
                 <>
                   <Loader2 size={16} className="mr-1.5 animate-spin" />
-                  Detecting…
+                  {t("myField.detecting")}
                 </>
               ) : (
                 <>
                   <Locate size={16} className="mr-1.5" />
-                  Detect my location
+                  {t("myField.detect")}
                 </>
               )}
             </Button>
           )}
 
           {locationError ? <p className="text-xs text-destructive">{locationError}</p> : null}
-          <p className="text-xs text-muted-foreground/80">
-            Used for weather alerts. Your browser will ask permission the first time.
-          </p>
+          <p className="text-xs text-muted-foreground/80">{t("myField.locHelp")}</p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-foreground">Weather alerts</label>
+          <label className="text-sm font-medium text-foreground">{t("myField.weatherAlerts")}</label>
           <Button
             variant="outline"
             onClick={async () => {
@@ -192,7 +198,8 @@ function MyFieldForm() {
                 await enablePushNotifications()
                 setPushEnabled(true)
               } catch (e) {
-                setPushError(e instanceof Error ? e.message : "Something went wrong")
+                const msg = e instanceof Error ? e.message : ""
+                setPushError(PUSH_ERRORS[msg] ? t(PUSH_ERRORS[msg]) : msg || t("login.somethingWrong"))
               } finally {
                 setPushBusy(false)
               }
@@ -200,7 +207,7 @@ function MyFieldForm() {
             disabled={pushBusy || pushEnabled}
             className="w-full justify-center"
           >
-            {pushEnabled ? "Notifications enabled ✓" : pushBusy ? "Enabling…" : "Enable weather notifications"}
+            {pushEnabled ? t("myField.pushEnabled") : pushBusy ? t("myField.pushEnabling") : t("myField.pushEnable")}
           </Button>
           {pushError ? <p className="text-xs text-destructive">{pushError}</p> : null}
         </div>
@@ -208,26 +215,23 @@ function MyFieldForm() {
         <div className="rounded-xl bg-primary/5 p-3.5 text-sm">
           <p className="mb-1.5 flex items-center gap-1.5 font-medium text-primary">
             <Sprout size={14} />
-            Estimated soil nutrients (starting point)
+            {t("myField.nutrients")}
           </p>
-          <p className="text-muted-foreground">
-            N: {npk.N} kg/ha · P: {npk.P} kg/ha · K: {npk.K} kg/ha
-          </p>
+          <p className="text-muted-foreground">{t("myField.npkLine", { N: npk.N, P: npk.P, K: npk.K })}</p>
           <p className="mt-1 text-xs text-muted-foreground/80">
-            These are general estimates for {soilType.toLowerCase()} soil. You can enter your
-            own values later in Fertilizer Suggestion if you have exact numbers.
+            {t("myField.npkNote", { soil: t(`soil.${soilType}.lower`) })}
           </p>
         </div>
 
         <Button onClick={handleSave} disabled={saving || !landArea} className="w-full justify-center">
-          {saving ? "Saving…" : "Save field details"}
+          {saving ? t("myField.saving") : t("myField.save")}
         </Button>
 
         {saved ? (
           <div className="flex flex-col gap-2">
-            <p className="text-center text-sm text-primary">Saved!</p>
+            <p className="text-center text-sm text-primary">{t("myField.saved")}</p>
             <Button variant="outline" onClick={() => router.push("/")} className="w-full justify-center">
-              Go to dashboard
+              {t("myField.goDashboard")}
             </Button>
           </div>
         ) : null}
