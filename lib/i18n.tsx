@@ -11,12 +11,19 @@ type LanguageContextValue = {
   lang: Lang
   setLang: (lang: Lang) => void
   t: TFunction
+  // Translates a crop name such as "rice", "Kidney Beans" or "Ground Nuts".
+  tc: (name: string) => string
+}
+
+function cropKey(name: string) {
+  return "crop." + name.toLowerCase().replace(/[^a-z]/g, "")
 }
 
 const LanguageContext = createContext<LanguageContextValue>({
   lang: "en",
   setLang: () => {},
   t: (key) => DICT.en[key] ?? key,
+  tc: (name) => DICT.en[cropKey(name)] ?? name,
 })
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -58,7 +65,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     [lang],
   )
 
-  return <LanguageContext.Provider value={{ lang, setLang, t }}>{children}</LanguageContext.Provider>
+  const tc = useCallback(
+    (name: string) => {
+      const key = cropKey(name)
+      return DICT[lang][key] ?? DICT.en[key] ?? name
+    },
+    [lang],
+  )
+
+  return <LanguageContext.Provider value={{ lang, setLang, t, tc }}>{children}</LanguageContext.Provider>
 }
 
 export function useT() {
