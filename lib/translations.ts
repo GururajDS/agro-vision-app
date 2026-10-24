@@ -6,6 +6,7 @@ import { fertilizer } from "@/lib/tr/fertilizer"
 import { weatherPrices } from "@/lib/tr/weather-prices"
 import { trendsEstimate } from "@/lib/tr/trends-estimate"
 import { expenditureProfile } from "@/lib/tr/expenditure-profile"
+import { organic } from "@/lib/tr/organic"
 
 export type Lang = "en" | "kn" | "hi"
 
@@ -18,7 +19,17 @@ export const LANGS: { code: Lang; label: string }[] = [
 type Area = Record<Lang, Record<string, string>>
 
 // Every area's text file is listed here. New areas get added to this list.
-const AREAS: Area[] = [common, shell, field, crops, fertilizer, weatherPrices, trendsEstimate, expenditureProfile]
+const AREAS: Area[] = [
+  common,
+  shell,
+  field,
+  crops,
+  fertilizer,
+  weatherPrices,
+  trendsEstimate,
+  expenditureProfile,
+  organic,
+]
 
 function merge(lang: Lang): Record<string, string> {
   return Object.assign({}, ...AREAS.map((a) => a[lang])) as Record<string, string>
