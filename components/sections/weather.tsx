@@ -3,27 +3,29 @@
 import { useState } from "react"
 import useSWR from "swr"
 import { Search, MapPin, Thermometer, Droplets, CloudSun, Sunrise, Loader2, AlertTriangle } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 type WeatherResult = {
   location: string
   temperature: number
   humidity: number
+  // A translation key such as "weather.cond.clear"
   condition: string
 }
 
 function describeWeatherCode(code: number): string {
-  if (code === 0) return "Clear sky"
-  if (code >= 1 && code <= 3) return "Partly cloudy"
-  if (code === 45 || code === 48) return "Foggy"
-  if (code >= 51 && code <= 67) return "Rainy"
-  if (code >= 71 && code <= 86) return "Snowy"
-  if (code >= 95) return "Thunderstorm"
-  return "Unknown"
+  if (code === 0) return "weather.cond.clear"
+  if (code >= 1 && code <= 3) return "weather.cond.partly"
+  if (code === 45 || code === 48) return "weather.cond.foggy"
+  if (code >= 51 && code <= 67) return "weather.cond.rainy"
+  if (code >= 71 && code <= 86) return "weather.cond.snowy"
+  if (code >= 95) return "weather.cond.thunder"
+  return "weather.cond.unknown"
 }
 
-async function fetchWeather(location: string): Promise<WeatherResult> {
+async function fetchWeather(location: string, lang: string): Promise<WeatherResult> {
   const geoRes = await fetch(
-    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1`,
+    `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(location)}&count=1&language=${lang}`,
   )
   if (!geoRes.ok) throw new Error("geocoding-failed")
   const geo = (await geoRes.json()) as {
@@ -52,14 +54,19 @@ async function fetchWeather(location: string): Promise<WeatherResult> {
 }
 
 export function Weather() {
+  const { t, lang } = useT()
   const [query, setQuery] = useState("")
   const [location, setLocation] = useState("Bengaluru")
 
-  const { data: weather, error, isLoading } = useSWR(["weather", location], () => fetchWeather(location), {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-    keepPreviousData: true,
-  })
+  const { data: weather, error, isLoading } = useSWR(
+    ["weather", location, lang],
+    () => fetchWeather(location, lang),
+    {
+      revalidateOnFocus: false,
+      shouldRetryOnError: false,
+      keepPreviousData: true,
+    },
+  )
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -81,7 +88,7 @@ export function Weather() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter a location (e.g. Nashik)"
+            placeholder={t("weather.placeholder")}
             className="w-full rounded-xl border border-input bg-card py-3 pl-10 pr-3.5 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/30"
           />
         </div>
@@ -91,16 +98,14 @@ export function Weather() {
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Search size={18} />}
-          Search
+          {t("weather.search")}
         </button>
       </form>
 
       {error ? (
         <div className="mt-6 flex items-center gap-3 rounded-2xl border border-destructive/30 bg-destructive/10 px-5 py-4 text-sm text-foreground">
           <AlertTriangle size={20} className="shrink-0 text-destructive" />
-          {notFound
-            ? `We couldn't find "${location}". Please check the spelling and try another location.`
-            : "We couldn't load the weather right now. Please try again in a moment."}
+          {notFound ? t("weather.notFound", { location }) : t("weather.loadError")}
         </div>
       ) : (
         <>
@@ -122,7 +127,7 @@ export function Weather() {
                   )}
                 </div>
                 <p className="mt-1 text-sm text-primary-foreground/80">
-                  {isLoading && !weather ? "Fetching latest conditions…" : weather?.condition}
+                  {isLoading && !weather ? t("weather.fetching") : weather ? t(weather.condition) : null}
                 </p>
               </div>
               <CloudSun size={96} strokeWidth={1.25} className="text-primary-foreground/70" />
@@ -132,12 +137,12 @@ export function Weather() {
           <div className="mt-4 grid grid-cols-2 gap-3">
             {[
               {
-                label: "Temperature",
+                label: t("label.temperature"),
                 value: weather ? `${weather.temperature}°C` : "—",
                 icon: Thermometer,
               },
               {
-                label: "Humidity",
+                label: t("label.humidity"),
                 value: weather ? `${weather.humidity}%` : "—",
                 icon: Droplets,
               },
@@ -156,7 +161,7 @@ export function Weather() {
 
           <div className="mt-4 flex items-center gap-2 rounded-xl border border-border bg-accent/30 px-4 py-3 text-sm text-secondary-foreground">
             <Sunrise size={18} className="text-accent-foreground" />
-            Live current conditions from Open-Meteo. No API key required.
+            {t("weather.source")}
           </div>
         </>
       )}
