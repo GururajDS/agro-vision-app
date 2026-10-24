@@ -12,12 +12,14 @@ import {
   deleteExpenditureEntry,
   type ExpenditureEntry,
 } from "@/lib/expenditure"
+import { useT } from "@/lib/i18n"
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
 function ExpenditureDiary() {
+  const { t } = useT()
   const [entries, setEntries] = useState<ExpenditureEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [category, setCategory] = useState<string>(EXPENSE_CATEGORIES[0])
@@ -25,6 +27,13 @@ function ExpenditureDiary() {
   const [date, setDate] = useState(todayStr())
   const [note, setNote] = useState("")
   const [adding, setAdding] = useState(false)
+
+  // Shows the translated category name; unknown categories are shown as saved.
+  const catLabel = (c: string) => {
+    const key = `expense.cat.${c}`
+    const translated = t(key)
+    return translated === key ? c : translated
+  }
 
   async function load() {
     setLoading(true)
@@ -70,19 +79,33 @@ function ExpenditureDiary() {
           <Wallet size={20} />
         </div>
         <div>
-          <h1 className="font-heading text-lg font-bold text-foreground">Expenditure Diary</h1>
-          <p className="text-xs text-muted-foreground">Log what you spend, step by step</p>
+          <h1 className="font-heading text-lg font-bold text-foreground">{t("nav.expenditure")}</h1>
+          <p className="text-xs text-muted-foreground">{t("exp.sub")}</p>
         </div>
       </div>
 
       <form onSubmit={handleAdd} className="mb-6 rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="grid gap-4 sm:grid-cols-2">
-          <SelectField label="Category" name="category" value={category} onChange={setCategory} options={EXPENSE_CATEGORIES} />
-          <NumberField label="Amount" name="amount" unit="₹" value={amount} onChange={setAmount} placeholder="e.g. 500" />
+          <SelectField
+            label={t("exp.category")}
+            name="category"
+            value={category}
+            onChange={setCategory}
+            options={EXPENSE_CATEGORIES}
+            getLabel={catLabel}
+          />
+          <NumberField
+            label={t("exp.amount")}
+            name="amount"
+            unit="₹"
+            value={amount}
+            onChange={setAmount}
+            placeholder={t("exp.amountPlaceholder")}
+          />
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="entry-date" className="text-sm font-medium text-foreground">
-              Date
+              {t("exp.date")}
             </label>
             <input
               id="entry-date"
@@ -96,14 +119,14 @@ function ExpenditureDiary() {
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="note" className="text-sm font-medium text-foreground">
-              What did you spend on? (optional)
+              {t("exp.note")}
             </label>
             <input
               id="note"
               type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="e.g. Urea 2 bags from Ramesh's shop"
+              placeholder={t("exp.notePlaceholder")}
               className="w-full rounded-xl border border-input bg-card px-3.5 py-2.5 text-sm text-foreground shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
             />
           </div>
@@ -111,20 +134,20 @@ function ExpenditureDiary() {
 
         <Button type="submit" disabled={adding || !amount} className="mt-4 w-full justify-center gap-2 sm:w-auto">
           {adding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-          Add entry
+          {t("exp.add")}
         </Button>
       </form>
 
       <div className="mb-3 flex items-center justify-between rounded-xl bg-primary/5 px-4 py-3">
-        <span className="text-sm font-medium text-foreground">Total spent</span>
+        <span className="text-sm font-medium text-foreground">{t("exp.total")}</span>
         <span className="font-heading text-lg font-bold text-primary">₹{total.toLocaleString("en-IN")}</span>
       </div>
 
       {loading ? (
-        <p className="text-center text-sm text-muted-foreground">Loading…</p>
+        <p className="text-center text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : entries.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          No entries yet. Add your first expense above.
+          {t("exp.empty")}
         </p>
       ) : (
         <div className="flex flex-col gap-2">
@@ -135,7 +158,7 @@ function ExpenditureDiary() {
             >
               <div>
                 <p className="text-sm font-medium text-foreground">
-                  {entry.category} · ₹{Number(entry.amount).toLocaleString("en-IN")}
+                  {catLabel(entry.category)} · ₹{Number(entry.amount).toLocaleString("en-IN")}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {entry.entry_date}
@@ -145,7 +168,7 @@ function ExpenditureDiary() {
               <button
                 onClick={() => handleDelete(entry.id)}
                 className="text-muted-foreground transition hover:text-destructive"
-                aria-label="Delete entry"
+                aria-label={t("exp.delete")}
               >
                 <Trash2 size={16} />
               </button>
