@@ -12,6 +12,7 @@ import {
   type PricePoint,
 } from "@/lib/price-history"
 import { getSelectedCrop } from "@/lib/selected-crop"
+import { useT } from "@/lib/i18n"
 
 const RANGE_OPTIONS = ["7", "30", "90"] as const
 
@@ -29,6 +30,7 @@ function pickDefault(list: CommodityInfo[], savedCrop: string | null): string {
 }
 
 function PriceTrendsView() {
+  const { t } = useT()
   const [commodities, setCommodities] = useState<string[]>([])
   const [selected, setSelected] = useState<string>("")
   const [range, setRange] = useState<(typeof RANGE_OPTIONS)[number]>("30")
@@ -69,20 +71,20 @@ function PriceTrendsView() {
           <LineChart size={20} />
         </div>
         <div>
-          <h1 className="font-heading text-lg font-bold text-foreground">Price Trends</h1>
-          <p className="text-xs text-muted-foreground">Track how commodity prices are moving</p>
+          <h1 className="font-heading text-lg font-bold text-foreground">{t("nav.priceTrends")}</h1>
+          <p className="text-xs text-muted-foreground">{t("trends.sub")}</p>
         </div>
       </div>
 
       {listLoaded && commodities.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-          No price data collected yet. Check back after tomorrow's automatic update.
+          {t("trends.noData")}
         </p>
       ) : (
         <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <SelectField
-              label="Commodity"
+              label={t("prices.col.commodity")}
               name="commodity"
               value={selected}
               onChange={setSelected}
@@ -91,7 +93,7 @@ function PriceTrendsView() {
 
             <div className="flex flex-col gap-1.5">
               <label htmlFor="range" className="text-sm font-medium text-foreground">
-                Time range
+                {t("trends.timeRange")}
               </label>
               <select
                 id="range"
@@ -101,7 +103,7 @@ function PriceTrendsView() {
               >
                 {RANGE_OPTIONS.map((r) => (
                   <option key={r} value={r}>
-                    Last {r} days
+                    {t("trends.lastDays", { n: r })}
                   </option>
                 ))}
               </select>
