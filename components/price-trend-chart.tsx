@@ -1,20 +1,23 @@
 "use client"
 
 import type { PricePoint } from "@/lib/price-history"
+import { useT } from "@/lib/i18n"
 
 export function PriceTrendChart({ data }: { data: PricePoint[] }) {
+  const { t } = useT()
+
   if (data.length === 0) {
     return (
-      <div className="flex h-56 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
-        No price history yet for this commodity.
+      <div className="flex h-56 items-center justify-center rounded-xl border border-dashed border-border px-4 text-center text-sm text-muted-foreground">
+        {t("trends.chart.none")}
       </div>
     )
   }
 
   if (data.length === 1) {
     return (
-      <div className="flex h-56 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border text-sm text-muted-foreground">
-        <p>Only one data point so far — check back after a few more days.</p>
+      <div className="flex h-56 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-border px-4 text-center text-sm text-muted-foreground">
+        <p>{t("trends.chart.one")}</p>
         <p className="font-medium text-foreground">₹{data[0].price.toLocaleString("en-IN")}</p>
       </div>
     )
@@ -54,7 +57,7 @@ export function PriceTrendChart({ data }: { data: PricePoint[] }) {
         <span className={`text-sm font-medium ${change >= 0 ? "text-primary" : "text-destructive"}`}>
           {change >= 0 ? "▲" : "▼"} {Math.abs(changePct).toFixed(1)}%
         </span>
-        <span className="text-xs text-muted-foreground">over this period</span>
+        <span className="text-xs text-muted-foreground">{t("trends.chart.period")}</span>
       </div>
 
       <svg viewBox={`0 0 ${width} ${height}`} className="w-full" preserveAspectRatio="none">
