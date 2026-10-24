@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import useSWR from "swr"
 import { Search, Loader2, AlertTriangle } from "lucide-react"
+import { useT } from "@/lib/i18n"
 
 type CommodityRecord = {
   commodity?: string
@@ -33,6 +34,7 @@ function formatPrice(value: string | number | undefined) {
 }
 
 export function CommodityPrices() {
+  const { t } = useT()
   const [query, setQuery] = useState("")
   const { data, error, isLoading } = useSWR("/api/commodity-prices", fetcher, {
     revalidateOnFocus: false,
@@ -50,8 +52,8 @@ export function CommodityPrices() {
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="font-heading text-lg font-semibold text-foreground">Market Prices</h2>
-          <p className="mt-1 text-sm text-muted-foreground">Latest mandi rates from the commodity price service.</p>
+          <h2 className="font-heading text-lg font-semibold text-foreground">{t("prices.title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("prices.sub")}</p>
         </div>
         <div className="relative sm:w-72">
           <Search
@@ -62,7 +64,7 @@ export function CommodityPrices() {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by commodity"
+            placeholder={t("prices.search")}
             className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-3.5 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground/60 focus:border-primary focus:ring-2 focus:ring-ring/30"
           />
         </div>
@@ -71,26 +73,24 @@ export function CommodityPrices() {
       {isLoading ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Loader2 size={32} className="animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Fetching the latest market prices…</p>
+          <p className="text-sm text-muted-foreground">{t("prices.fetching")}</p>
         </div>
       ) : error ? (
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-destructive/12 text-destructive">
             <AlertTriangle size={26} />
           </div>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            We couldn&apos;t load market prices right now. Please try again in a moment.
-          </p>
+          <p className="max-w-sm text-sm text-muted-foreground">{t("prices.error")}</p>
         </div>
       ) : (
         <div className="mt-5 overflow-x-auto">
           <table className="w-full min-w-[560px] border-collapse text-left">
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="pb-3 pr-4 font-medium">Commodity</th>
-                <th className="pb-3 pr-4 font-medium">Market</th>
-                <th className="pb-3 pr-4 font-medium">State</th>
-                <th className="pb-3 font-medium">Modal Price</th>
+                <th className="pb-3 pr-4 font-medium">{t("prices.col.commodity")}</th>
+                <th className="pb-3 pr-4 font-medium">{t("prices.col.market")}</th>
+                <th className="pb-3 pr-4 font-medium">{t("prices.col.state")}</th>
+                <th className="pb-3 font-medium">{t("prices.col.modal")}</th>
               </tr>
             </thead>
             <tbody>
@@ -107,9 +107,7 @@ export function CommodityPrices() {
 
           {filtered.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              {records.length === 0
-                ? "No market prices are available right now."
-                : `No commodities match “${query}”.`}
+              {records.length === 0 ? t("prices.none") : t("prices.noMatch", { query })}
             </p>
           ) : null}
         </div>
