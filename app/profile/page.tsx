@@ -9,13 +9,10 @@ import { getValidSession, signOut } from "@/lib/supabase-auth"
 import { getFieldProfile, type FieldProfile } from "@/lib/field-profile"
 import { getHarvestEstimate, type HarvestEstimate } from "@/lib/estimate"
 import { getExpenditureEntries, type ExpenditureEntry } from "@/lib/expenditure"
+import { useT } from "@/lib/i18n"
 
 function inr(n: number) {
   return `₹${n.toLocaleString("en-IN", { maximumFractionDigits: 0 })}`
-}
-
-function capitalize(s: string) {
-  return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
 function formatDate(d: string) {
@@ -67,6 +64,7 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function ProfileView() {
   const router = useRouter()
+  const { t, tc } = useT()
   const [loading, setLoading] = useState(true)
   const [name, setName] = useState<string>("")
   const [email, setEmail] = useState<string>("")
@@ -81,7 +79,7 @@ function ProfileView() {
       const meta = (session?.user as unknown as { user_metadata?: { full_name?: string; name?: string } } | undefined)
         ?.user_metadata
       setEmail(userEmail)
-      setName(meta?.full_name || meta?.name || (userEmail ? userEmail.split("@")[0] : "Farmer"))
+      setName(meta?.full_name || meta?.name || (userEmail ? userEmail.split("@")[0] : ""))
 
       const [f, est, exp] = await Promise.all([getFieldProfile(), getHarvestEstimate(), getExpenditureEntries()])
       setField(f)
@@ -100,24 +98,37 @@ function ProfileView() {
     )
   }
 
+  const displayName = name || t("profile.farmer")
   const totalSpent = entries.reduce((sum, e) => sum + Number(e.amount), 0)
   const recent = entries.slice(0, 5)
+
+  const catLabel = (c: string) => {
+    const key = `expense.cat.${c}`
+    const translated = t(key)
+    return translated === key ? c : translated
+  }
+
+  const soilLabel = (s: string) => {
+    const key = `soil.${s}`
+    const translated = t(key)
+    return translated === key ? s : translated
+  }
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-4 p-5">
       <Link href="/" className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline">
         <ArrowLeft size={16} />
-        Back to dashboard
+        {t("profile.back")}
       </Link>
 
       {/* Account */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="flex items-center gap-4">
           <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 font-heading text-xl font-bold text-primary">
-            {name ? name.charAt(0).toUpperCase() : <User size={24} />}
+            {displayName ? displayName.charAt(0).toUpperCase() : <User size={24} />}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-heading text-lg font-bold text-foreground">{name}</h1>
+            <h1 className="truncate font-heading text-lg font-bold text-foreground">{displayName}</h1>
             <p className="truncate text-sm text-muted-foreground">{email}</p>
           </div>
           <button
@@ -128,63 +139,70 @@ function ProfileView() {
             className="flex shrink-0 items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-sm font-medium text-foreground transition hover:bg-muted"
           >
             <LogOut size={14} />
-            Log out
+            {t("common.logout")}
           </button>
         </div>
       </section>
 
       {/* Field */}
-      <Card icon={<MapPin size={18} />} title="My Field" href="/my-field" linkLabel="Edit">
+      <Card icon={<MapPin size={18} />} title={t("nav.myField")} href="/my-field" linkLabel={t("profile.edit")}>
         {field ? (
           <div>
-            <Row label="Land area" value={`${field.land_area_acres} acres`} />
-            <Row label="Soil type" value={field.soil_type} />
-            <Row label="Location" value={field.location_name || "Not set"} />
+            <Row label={t("myField.landArea")} value={t("estimate.acres", { n: field.land_area_acres })} />
+            <Row label={t("myField.soilType")} value={soilLabel(field.soil_type)} />
+            <Row label={t("myField.location")} value={field.location_name || t("profile.notSet")} />
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No field details saved yet.</p>
+          <p className="text-sm text-muted-foreground">{t("profile.noField")}</p>
         )}
       </Card>
 
       {/* Crop + estimate */}
       <Card
         icon={<Wheat size={18} />}
-        title={estimate?.crop ? `${capitalize(estimate.crop)} — harvest estimate` : "Crop & harvest estimate"}
+        title={estimate?.crop ? t("profile.cropTitle", { crop: tc(estimate.crop) }) : t("profile.cropTitleDefault")}
         href="/estimate"
-        linkLabel="Full estimate"
+        linkLabel={t("profile.fullEstimate")}
       >
         {estimate?.crop ? (
           <div>
             <Row
-              label="Estimated yield"
-              value={estimate.yieldKg !== null ? `${Math.round(estimate.yieldKg).toLocaleString("en-IN")} kg` : "—"}
+              label={t("estimate.yield")}
+              value={
+                estimate.yieldKg !== null
+                  ? t("estimate.kg", { n: Math.round(estimate.yieldKg).toLocaleString("en-IN") })
+                  : "—"
+              }
             />
             <Row
-              label="Market price"
-              value={estimate.pricePerQuintal !== null ? `${inr(estimate.pricePerQuintal)} / quintal` : "—"}
+              label={t("estimate.price")}
+              value={
+                estimate.pricePerQuintal !== null
+                  ? t("estimate.perQuintal", { price: inr(estimate.pricePerQuintal) })
+                  : "—"
+              }
             />
-            <Row label="Estimated revenue" value={estimate.revenue !== null ? inr(estimate.revenue) : "—"} />
-            <Row label="Total expenditure" value={inr(estimate.totalExpenditure)} />
+            <Row label={t("estimate.revenue")} value={estimate.revenue !== null ? inr(estimate.revenue) : "—"} />
+            <Row label={t("estimate.expenditure")} value={inr(estimate.totalExpenditure)} />
             <Row
-              label="Estimated profit"
+              label={t("estimate.profit")}
               value={estimate.profit !== null ? `${estimate.profit < 0 ? "-" : ""}${inr(Math.abs(estimate.profit))}` : "—"}
             />
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">
-            No crop saved yet. Get a{" "}
-            <Link href="/" className="font-medium text-primary hover:underline">
-              crop suggestion
-            </Link>{" "}
-            and tap "Continue with this crop?" to see your estimate here.
-          </p>
+          <div className="text-sm text-muted-foreground">
+            <p>{t("profile.noCrop")}</p>
+            <Link href="/" className="mt-2 inline-block font-medium text-primary hover:underline">
+              {t("nav.crop")} →
+            </Link>
+          </div>
         )}
       </Card>
 
       {/* Expenditure */}
-      <Card icon={<Wallet size={18} />} title="Expenditure" href="/expenditure" linkLabel="Open diary">
+      <Card icon={<Wallet size={18} />} title={t("profile.expenditure")} href="/expenditure" linkLabel={t("profile.openDiary")}>
         <div className="mb-2 flex items-baseline justify-between">
-          <span className="text-sm text-muted-foreground">Total spent</span>
+          <span className="text-sm text-muted-foreground">{t("exp.total")}</span>
           <span className="font-heading text-xl font-bold text-foreground">{inr(totalSpent)}</span>
         </div>
         {recent.length > 0 ? (
@@ -195,7 +213,7 @@ function ProfileView() {
                 className="flex items-center justify-between gap-3 border-t border-border py-2 text-sm"
               >
                 <div className="min-w-0">
-                  <p className="font-medium text-foreground">{e.category}</p>
+                  <p className="font-medium text-foreground">{catLabel(e.category)}</p>
                   <p className="truncate text-xs text-muted-foreground">
                     {formatDate(e.entry_date)}
                     {e.note ? ` · ${e.note}` : ""}
@@ -206,7 +224,7 @@ function ProfileView() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">No expenses added yet.</p>
+          <p className="text-sm text-muted-foreground">{t("profile.noExpenses")}</p>
         )}
       </Card>
     </div>
